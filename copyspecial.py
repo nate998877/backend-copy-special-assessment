@@ -24,6 +24,14 @@ __author__ = "not nate"
 # Write functions and modify main() to call them
 
 def get_special_paths(dir):
+    """[takes a path and finds all special(__\w__) files]
+
+    Arguments:
+        dir {[str]} -- [the directory to search in for special files]
+
+    Returns:
+        [arr[str]] -- [An array of strings containing the full paths of all special files in a given directory]
+    """
     arr = []
     for filename in os.listdir(dir):
         r = re.search(".*__.*__.*", filename)
@@ -32,15 +40,36 @@ def get_special_paths(dir):
     return arr
 
 def copy_to(paths, dir):
+    """[Takes a list of file paths and copies them to a given dir]
+
+    Arguments:
+        paths {[arr[str]]} -- [An array of strings containing the absolute path of files to be copied to a new directory]
+        dir {[str]} -- [string containing the path to copy files too]
+    """
     if not os.path.exists(dir):
         os.mkdir(dir)
     for path in paths:
         copy(path, dir+"/")
 
 def zip_to(paths, zippath):
-    with ZipFile(zippath+".zip", 'w') as myzip:
-        for path in paths:
-            myzip.write(path)
+    """[Takes a list of file paths and Zips them to a given (path/)filename]
+
+    Arguments:
+        paths {[arr[str]]} -- [An array of strings containing the absolute path of files to be copied to a new directory]
+        zippath {[str]} -- [string containing the path to copy files too]
+    """
+    # with ZipFile(zippath+".zip", 'w') as myzip:
+    #     for path in paths:
+    #         myzip.write(path)
+    paths_str = ""
+    for path in paths:
+        paths_str += path + " "
+    call_str = "zip -j {}.zip {}".format(zippath, paths_str)
+    print(call_str)
+    try:
+        subprocess.call(call_str, shell=True)
+    except Exception as e:
+        print(e)
 
 
 def main():
@@ -56,12 +85,12 @@ def main():
         sys.exit(1)
 
     special_paths = get_special_paths(args.from_dir)
+    if not args.tozip and not args.todir:
+        print("nothing done with :", special_paths)
     if args.todir:
         copy_to(special_paths, args.todir)
     if args.tozip:
         zip_to(special_paths, args.tozip)
-    if not args.tozip and not args.todir:
-        print("nothing done with :", special_paths)
 
 
     # +++your code here+++
