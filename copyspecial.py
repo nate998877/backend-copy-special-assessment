@@ -11,34 +11,90 @@
 
 import re
 import os
-import shutil
+from shutil import copy
+from zipfile import ZipFile
 import subprocess
 import argparse
 
 # This is to help coaches and graders identify student assignments
-__author__ = "???"
+__author__ = "not nate"
 
 
 # +++your code here+++
 # Write functions and modify main() to call them
+
+def get_special_paths(dir):
+    """[takes a path and finds all special(__\w__) files]
+
+    Arguments:
+        dir {[str]} -- [the directory to search in for special files]
+
+    Returns:
+        [arr[str]] -- [An array of strings containing the full paths of all special files in a given directory]
+    """
+    arr = []
+    for filename in os.listdir(dir):
+        r = re.search(".*__.*__.*", filename)
+        if r:
+            arr.append(dir + "/" + filename)
+    return arr
+
+def copy_to(paths, dir):
+    """[Takes a list of file paths and copies them to a given dir]
+
+    Arguments:
+        paths {[arr[str]]} -- [An array of strings containing the absolute path of files to be copied to a new directory]
+        dir {[str]} -- [string containing the path to copy files too]
+    """
+    if not os.path.exists(dir):
+        os.mkdir(dir)
+    for path in paths:
+        copy(path, dir+"/")
+
+def zip_to(paths, zippath):
+    """[Takes a list of file paths and Zips them to a given (path/)filename]
+
+    Arguments:
+        paths {[arr[str]]} -- [An array of strings containing the absolute path of files to be copied to a new directory]
+        zippath {[str]} -- [string containing the path to copy files too]
+    """
+    # with ZipFile(zippath+".zip", 'w') as myzip:
+    #     for path in paths:
+    #         myzip.write(path)
+    paths_str = ""
+    for path in paths:
+        paths_str += path + " "
+    call_str = "zip -j {}.zip {}".format(zippath, paths_str)
+    print(call_str)
+    try:
+        subprocess.call(call_str, shell=True)
+    except Exception as e:
+        print(e)
+
 
 def main():
     # This snippet will help you get started with the argparse module.
     parser = argparse.ArgumentParser()
     parser.add_argument('--todir', help='dest dir for special files')
     parser.add_argument('--tozip', help='dest zipfile for special files')
-    # TODO need an argument to pick up 'from_dir'
+    parser.add_argument('--from_dir', help='src dir for special files', default=os.getcwd())
+
     args = parser.parse_args()
+    if not args:
+        parser.print_usage()
+        sys.exit(1)
 
-    # TODO you must write your own code to get the cmdline args.
-    # Read the docs and examples for the argparse module about how to do this.
+    special_paths = get_special_paths(args.from_dir)
+    if not args.tozip and not args.todir:
+        print("nothing done with :", special_paths)
+    if args.todir:
+        copy_to(special_paths, args.todir)
+    if args.tozip:
+        zip_to(special_paths, args.tozip)
 
-    # Parsing command line arguments is a must-have skill.
-    # This is input data validation.  If something is wrong (or missing) with any
-    # required args, the general rule is to print a usage message and exit(1).
 
     # +++your code here+++
-    # Call your functions
+
 
 
 if __name__ == "__main__":
